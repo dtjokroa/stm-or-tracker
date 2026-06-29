@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Search, Calendar, Building2, User, ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
-import type { Companion, Principal, Rental } from "@/app/lib/data";
+import type { Companion, Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
   fmtDisplayShort,
@@ -20,12 +20,11 @@ type FilterTab = "all" | "today" | "active" | "upcoming" | "completed";
 interface Props {
   rentals: Rental[];
   companions: Companion[];
-  principals: Principal[];
   onEdit: (rental: Rental) => void;
   onDelete: (rentalId: string) => void;
 }
 
-export default function ListView({ rentals, companions, principals, onEdit, onDelete }: Props) {
+export default function ListView({ rentals, companions, onEdit, onDelete }: Props) {
   const [tab, setTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
   const [sortAsc, setSortAsc] = useState(false);
@@ -160,7 +159,7 @@ function RentalListItem({
   onDelete,
 }: {
   rental: Rental;
-  principal?: Principal;
+  principal?: { color: string };
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -238,16 +237,6 @@ function RentalListItem({
             )}
             {rental.procedure && (
               <Detail label="Procedure" value={rental.procedure} />
-            )}
-            {principal && (
-              <Detail
-                label="Principal"
-                value={
-                  <span style={{ color: principal.color }} className="font-medium">
-                    {principal.name}
-                  </span>
-                }
-              />
             )}
             <Detail label="Serial" value={rental.serial} />
             <Detail label="Start" value={fmtDisplay(rental.rentalStart)} />

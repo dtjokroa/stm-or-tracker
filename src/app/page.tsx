@@ -13,7 +13,7 @@ import {
   Activity,
 } from "lucide-react";
 import type { Companion, Rental, UnitsByPrincipal } from "@/app/lib/data";
-import { PRINCIPALS, DEFAULT_UNITS, DEFAULT_COMPANIONS, todayStr } from "@/app/lib/data";
+import { DEFAULT_UNITS, DEFAULT_COMPANIONS, todayStr } from "@/app/lib/data";
 import type { AppState, LoadResult, StorageStatus } from "@/app/lib/persistence";
 import { loadInitialState, persistState } from "@/app/lib/persistence";
 import Dashboard from "@/app/components/Dashboard";
@@ -37,7 +37,6 @@ export default function Home() {
   const [editingRental, setEditingRental] = useState<Rental | null>(null);
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
   const [showStaffManager, setShowStaffManager] = useState(false);
-  const [filterPrincipalId, setFilterPrincipalId] = useState<string | null>(null);
 
   // Load initial state
   useEffect(() => {
@@ -125,7 +124,7 @@ export default function Home() {
             <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
               <Activity size={14} className="text-white" />
             </div>
-            <span className="text-sm font-bold text-gray-900 hidden sm:block">OR Tracker</span>
+            <span className="text-sm font-bold text-gray-900 hidden sm:block">IOM Tracker</span>
           </div>
 
           {/* Nav */}
@@ -199,7 +198,6 @@ export default function Home() {
           <Dashboard
             rentals={rentals}
             companions={companions}
-            principals={PRINCIPALS}
             onEditRental={openEditRental}
           />
         )}
@@ -207,11 +205,8 @@ export default function Home() {
         {view === "calendar" && (
           <CalendarView
             rentals={rentals}
-            principals={PRINCIPALS}
             onAddRental={openAddRental}
             onEditRental={openEditRental}
-            filterPrincipalId={filterPrincipalId}
-            onFilterChange={setFilterPrincipalId}
           />
         )}
 
@@ -219,7 +214,6 @@ export default function Home() {
           <ListView
             rentals={rentals}
             companions={companions}
-            principals={PRINCIPALS}
             onEdit={openEditRental}
             onDelete={handleDeleteRental}
           />
@@ -230,7 +224,6 @@ export default function Home() {
       {showRentalModal && (
         <RentalModal
           rental={editingRental}
-          principals={PRINCIPALS}
           unitsByPrincipal={unitsByPrincipal}
           companions={companions}
           onSave={handleSaveRental}

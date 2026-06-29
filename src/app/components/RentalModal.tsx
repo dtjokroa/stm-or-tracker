@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X, Calendar, Building2, User, Stethoscope, ChevronDown } from "lucide-react";
-import type { Companion, Principal, Rental, UnitsByPrincipal } from "@/app/lib/data";
+import type { Companion, Rental, UnitsByPrincipal } from "@/app/lib/data";
 import {
+  PRINCIPAL_ID,
   RENTAL_STATUSES,
   fmt,
   uid,
@@ -11,7 +12,6 @@ import {
 
 interface Props {
   rental?: Rental | null;
-  principals: Principal[];
   unitsByPrincipal: UnitsByPrincipal;
   companions: Companion[];
   onSave: (rental: Rental) => void;
@@ -20,10 +20,10 @@ interface Props {
 
 const today = () => fmt(new Date());
 
-export default function RentalModal({ rental, principals, unitsByPrincipal, companions, onSave, onClose }: Props) {
+export default function RentalModal({ rental, unitsByPrincipal, companions, onSave, onClose }: Props) {
   const isEdit = Boolean(rental);
 
-  const [principalId, setPrincipalId] = useState(rental?.principalId ?? principals[0]?.id ?? "");
+  const principalId = PRINCIPAL_ID;
   const [unitId, setUnitId] = useState(rental?.unitId ?? "");
   const [hospitalName, setHospitalName] = useState(rental?.hospitalName ?? "");
   const [department, setDepartment] = useState(rental?.department ?? "OR");
@@ -36,13 +36,6 @@ export default function RentalModal({ rental, principals, unitsByPrincipal, comp
   const [notes, setNotes] = useState(rental?.notes ?? "");
 
   const filteredUnits = unitsByPrincipal[principalId] ?? [];
-
-  // Reset unit when principal changes
-  useEffect(() => {
-    if (!filteredUnits.find((u) => u.id === unitId)) {
-      setUnitId(filteredUnits[0]?.id ?? "");
-    }
-  }, [principalId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canSave =
     principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd && companionId;
@@ -99,50 +92,29 @@ export default function RentalModal({ rental, principals, unitsByPrincipal, comp
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
-          {/* Principal + Unit */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-                Principal
-              </label>
-              <div className="relative">
-                <select
-                  value={principalId}
-                  onChange={(e) => setPrincipalId(e.target.value)}
-                  className="w-full pl-3 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                >
-                  {principals.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+          {/* Unit */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+              Unit
+            </label>
+            <div className="relative">
+              <select
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
+                className="w-full pl-3 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                disabled={filteredUnits.length === 0}
+              >
+                {filteredUnits.length === 0 ? (
+                  <option value="">No units — add them in Settings</option>
+                ) : (
+                  filteredUnits.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.label}
                     </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-                Unit
-              </label>
-              <div className="relative">
-                <select
-                  value={unitId}
-                  onChange={(e) => setUnitId(e.target.value)}
-                  className="w-full pl-3 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                  disabled={filteredUnits.length === 0}
-                >
-                  {filteredUnits.length === 0 ? (
-                    <option value="">No units available</option>
-                  ) : (
-                    filteredUnits.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.label}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
-              </div>
+                  ))
+                )}
+              </select>
+              <ChevronDown size={14} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
             </div>
           </div>
 

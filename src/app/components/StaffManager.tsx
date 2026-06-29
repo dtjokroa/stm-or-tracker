@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Plus, Trash2, UserCheck, Pencil, X, Check } from "lucide-react";
-import type { Companion, Principal, Unit, UnitsByPrincipal } from "@/app/lib/data";
-import { COMPANION_ROLES, PRINCIPALS, uid } from "@/app/lib/data";
+import type { Companion, Unit, UnitsByPrincipal } from "@/app/lib/data";
+import { COMPANION_ROLES, PRINCIPAL_ID, PRINCIPALS, uid } from "@/app/lib/data";
 
 interface Props {
   companions: Companion[];
@@ -211,7 +211,7 @@ function UnitsTab({
   unitsByPrincipal: UnitsByPrincipal;
   onUpdate: (units: UnitsByPrincipal) => void;
 }) {
-  const [selectedPrincipal, setSelectedPrincipal] = useState(PRINCIPALS[0].id);
+  const selectedPrincipal = PRINCIPAL_ID;
   const [newName, setNewName] = useState("");
   const [newSerial, setNewSerial] = useState("");
 
@@ -242,24 +242,6 @@ function UnitsTab({
 
   return (
     <div className="space-y-4">
-      {/* Principal tabs */}
-      <div className="flex gap-1.5 flex-wrap">
-        {PRINCIPALS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setSelectedPrincipal(p.id)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
-              selectedPrincipal === p.id
-                ? "text-white border-transparent"
-                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-            }`}
-            style={selectedPrincipal === p.id ? { backgroundColor: p.color } : {}}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
-
       {/* Add unit */}
       <div className="flex gap-2">
         <input
@@ -289,7 +271,7 @@ function UnitsTab({
       {/* Unit list */}
       {currentUnits.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-6">
-          No units for this principal.
+          No units added yet.
         </p>
       ) : (
         <div className="space-y-1.5">
@@ -300,10 +282,7 @@ function UnitsTab({
             >
               <div
                 className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{
-                  backgroundColor:
-                    PRINCIPALS.find((p) => p.id === selectedPrincipal)?.color ?? "#6b7280",
-                }}
+                style={{ backgroundColor: PRINCIPALS[0].color }}
               />
               <div className="flex-1 min-w-0">
                 <span className="text-sm font-medium text-gray-800">{u.name}</span>

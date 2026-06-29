@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Activity, Clock, CheckCircle, AlertCircle, User, Building2, ArrowRight } from "lucide-react";
-import type { Companion, Principal, Rental } from "@/app/lib/data";
+import type { Companion, Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
   fmtDisplayShort,
@@ -17,11 +17,10 @@ import {
 interface Props {
   rentals: Rental[];
   companions: Companion[];
-  principals: Principal[];
   onEditRental: (rental: Rental) => void;
 }
 
-export default function Dashboard({ rentals, companions, principals, onEditRental }: Props) {
+export default function Dashboard({ rentals, companions, onEditRental }: Props) {
   const today = todayStr();
 
   const todayRentals = useMemo(
@@ -198,7 +197,7 @@ function RentalCard({
   compact = false,
 }: {
   rental: Rental;
-  principal?: Principal;
+  principal?: { color: string };
   onClick: () => void;
   compact?: boolean;
 }) {

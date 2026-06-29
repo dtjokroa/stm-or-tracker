@@ -73,13 +73,10 @@ export interface Rental {
 // ── Constants ─────────────────────────────────────────────────────
 
 export const PRINCIPALS: Principal[] = [
-  { id: "mitaka", name: "Mitaka", color: "#2563eb" },
-  { id: "huidamed-hsd", name: "Huidamed (HSD)", color: "#059669" },
-  { id: "huidamed-head-frame", name: "Huidamed (Head Frame)", color: "#10b981" },
-  { id: "vivostat", name: "VivoStat", color: "#f97316" },
-  { id: "vpix", name: "vPIx", color: "#0ea5e9" },
-  { id: "alltion", name: "Alltion", color: "#dc2626" },
+  { id: "principal", name: "Principal", color: "#2563eb" },
 ];
+
+export const PRINCIPAL_ID = PRINCIPALS[0].id;
 
 const mkUnit = (name: string, serial: string): Unit => ({
   id: serial,
@@ -89,12 +86,7 @@ const mkUnit = (name: string, serial: string): Unit => ({
 });
 
 export const DEFAULT_UNITS: UnitsByPrincipal = {
-  mitaka: [mkUnit("Mitaka MM80", "564745"), mkUnit("Mitaka MM90", "000369")],
-  "huidamed-hsd": [],
-  "huidamed-head-frame": [],
-  vivostat: [],
-  vpix: [],
-  alltion: [],
+  principal: [],
 };
 
 export const DEFAULT_COMPANIONS: Companion[] = [

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import type { Principal, Rental } from "@/app/lib/data";
+import type { Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
   fmtDisplayShort,
@@ -11,26 +11,18 @@ import {
   getPrincipalById,
   getStatusMeta,
   isInRange,
-  isRentalToday,
-  RENTAL_STATUSES,
 } from "@/app/lib/data";
 
 interface Props {
   rentals: Rental[];
-  principals: Principal[];
   onAddRental: (date?: string) => void;
   onEditRental: (rental: Rental) => void;
-  filterPrincipalId: string | null;
-  onFilterChange: (id: string | null) => void;
 }
 
 export default function CalendarView({
   rentals,
-  principals,
   onAddRental,
   onEditRental,
-  filterPrincipalId,
-  onFilterChange,
 }: Props) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -50,12 +42,8 @@ export default function CalendarView({
     else setMonth(m => m + 1);
   };
 
-  const filtered = filterPrincipalId
-    ? rentals.filter((r) => r.principalId === filterPrincipalId)
-    : rentals;
-
   function getRentalsForDay(dateStr: string): Rental[] {
-    return filtered.filter(
+    return rentals.filter(
       (r) => r.status !== "cancelled" && isInRange(dateStr, r.rentalStart, r.rentalEnd)
     );
   }
@@ -71,34 +59,6 @@ export default function CalendarView({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Filter bar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => onFilterChange(null)}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-            filterPrincipalId === null
-              ? "bg-gray-900 text-white border-gray-900"
-              : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-          }`}
-        >
-          All
-        </button>
-        {principals.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => onFilterChange(filterPrincipalId === p.id ? null : p.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-              filterPrincipalId === p.id
-                ? "text-white border-transparent"
-                : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-            }`}
-            style={filterPrincipalId === p.id ? { backgroundColor: p.color, borderColor: p.color } : {}}
-          >
-            {p.name}
-          </button>
-        ))}
-      </div>
-
       {/* Calendar */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Month nav */}
@@ -232,7 +192,7 @@ function RentalCard({
   onClick,
 }: {
   rental: Rental;
-  principal?: Principal;
+  principal?: { color: string };
   onClick: () => void;
 }) {
   const statusMeta = getStatusMeta(rental.status);
@@ -270,11 +230,6 @@ function RentalCard({
           </div>
           <p className="text-[11px] text-gray-400 mt-1.5">
             {fmtDisplayShort(rental.rentalStart)} – {fmtDisplayShort(rental.rentalEnd)}
-            {principal && (
-              <span className="ml-2 font-medium" style={{ color: principal.color }}>
-                {principal.name}
-              </span>
-            )}
           </p>
         </div>
       </div>
