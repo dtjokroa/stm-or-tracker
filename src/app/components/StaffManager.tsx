@@ -1,28 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, UserCheck, Pencil, X, Check } from "lucide-react";
-import type { Representative, Unit, UnitsByPrincipal } from "@/app/lib/data";
+import { useRef, useState } from "react";
+import { Plus, Trash2, UserCheck, Pencil, X, Check, Download, Upload, Database } from "lucide-react";
+import type { Representative, Rental, Unit, UnitsByPrincipal } from "@/app/lib/data";
 import { REPRESENTATIVE_ROLES, PRINCIPAL_ID, PRINCIPALS, uid } from "@/app/lib/data";
 
 interface Props {
   representatives: Representative[];
   unitsByPrincipal: UnitsByPrincipal;
+  rentals: Rental[];
   onUpdateRepresentatives: (representatives: Representative[]) => void;
   onUpdateUnits: (units: UnitsByPrincipal) => void;
+  onRestoreBackup: (rentals: Rental[], representatives: Representative[], unitsByPrincipal: UnitsByPrincipal) => void;
   onClose: () => void;
 }
 
-type Tab = "representatives" | "units";
+type Tab = "representatives" | "units" | "backup";
 
 export default function StaffManager({
   representatives,
   unitsByPrincipal,
+  rentals,
   onUpdateRepresentatives,
   onUpdateUnits,
+  onRestoreBackup,
   onClose,
 }: Props) {
   const [tab, setTab] = useState<Tab>("representatives");
+
+  const TAB_LABELS: { id: Tab; label: string }[] = [
+    { id: "representatives", label: "Representatives" },
+    { id: "units", label: "Units" },
+    { id: "backup", label: "Backup" },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -37,17 +47,17 @@ export default function StaffManager({
 
         {/* Tabs */}
         <div className="flex border-b border-gray-100 flex-shrink-0">
-          {(["representatives", "units"] as Tab[]).map((t) => (
+          {TAB_LABELS.map(({ id, label }) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors ${
-                tab === t
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                tab === id
                   ? "text-blue-600 border-b-2 border-blue-600 -mb-px"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t}
+              {label}
             </button>
           ))}
         </div>
@@ -58,6 +68,14 @@ export default function StaffManager({
           )}
           {tab === "units" && (
             <UnitsTab unitsByPrincipal={unitsByPrincipal} onUpdate={onUpdateUnits} />
+          )}
+          {tab === "backup" && (
+            <BackupTab
+              rentals={rentals}
+              representatives={representatives}
+              unitsByPrincipal={unitsByPrincipal}
+              onRestore={onRestoreBackup}
+            />
           )}
         </div>
       </div>
@@ -197,6 +215,138 @@ function RepresentativesTab({
             </div>
           )
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Backup Tab ────────────────────────────────────────────────────
+
+interface BackupPayload {
+  version: number;
+  exportedAt: string;
+  rentals: Rental[];
+  representatives: Representative[];
+  unitsByPrincipal: UnitsByPrincipal;
+}
+
+function BackupTab({
+  rentals,
+  representatives,
+  unitsByPrincipal,
+  onRestore,
+}: {
+  rentals: Rental[];
+  representatives: Representative[];
+  unitsByPrincipal: UnitsByPrincipal;
+  onRestore: (rentals: Rental[], representatives: Representative[], unitsByPrincipal: UnitsByPrincipal) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [restoreMsg, setRestoreMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const unitCount = Object.values(unitsByPrincipal).flat().length;
+
+  function handleExport() {
+    const payload: BackupPayload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      rentals,
+      representatives,
+      unitsByPrincipal,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `iom-tracker-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const payload = JSON.parse(reader.result as string) as BackupPayload;
+        if (
+          !Array.isArray(payload.rentals) ||
+          !Array.isArray(payload.representatives) ||
+          typeof payload.unitsByPrincipal !== "object"
+        ) {
+          throw new Error("Invalid backup format.");
+        }
+        if (!confirm(`Restore ${payload.rentals.length} rentals, ${payload.representatives.length} representatives, and ${Object.values(payload.unitsByPrincipal).flat().length} units from backup dated ${payload.exportedAt?.slice(0, 10) ?? "unknown"}?\n\nThis will overwrite current data.`)) return;
+        onRestore(payload.rentals, payload.representatives, payload.unitsByPrincipal);
+        setRestoreMsg({ ok: true, text: "Backup restored successfully." });
+      } catch (err) {
+        setRestoreMsg({ ok: false, text: `Restore failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+      }
+      if (fileRef.current) fileRef.current.value = "";
+    };
+    reader.readAsText(file);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Rentals", value: rentals.length },
+          { label: "Representatives", value: representatives.length },
+          { label: "Units", value: unitCount },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-gray-50 rounded-lg px-3 py-3 text-center">
+            <p className="text-lg font-semibold text-gray-900">{value}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Export */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Export</p>
+        <p className="text-sm text-gray-500 mb-3">
+          Download a full JSON backup of all rentals, representatives, and units. Store this file somewhere safe.
+        </p>
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+        >
+          <Download size={15} />
+          Download Backup
+        </button>
+      </div>
+
+      {/* Import */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Restore</p>
+        <p className="text-sm text-gray-500 mb-3">
+          Restore data from a previously exported backup file. This will overwrite current data.
+        </p>
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          <Upload size={15} />
+          Restore from File
+        </button>
+        <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+      </div>
+
+      {restoreMsg && (
+        <p className={`text-sm px-3 py-2 rounded-lg ${restoreMsg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+          {restoreMsg.text}
+        </p>
+      )}
+
+      {/* DB note */}
+      <div className="pt-2 border-t border-gray-100">
+        <div className="flex items-start gap-2 text-xs text-gray-400">
+          <Database size={12} className="mt-0.5 flex-shrink-0" />
+          <p>Cloud data is stored in Supabase with daily automated backups. Point-in-Time Recovery is available on paid plans.</p>
+        </div>
       </div>
     </div>
   );

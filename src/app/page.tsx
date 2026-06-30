@@ -236,8 +236,14 @@ export default function Home() {
         <StaffManager
           representatives={representatives}
           unitsByPrincipal={unitsByPrincipal}
+          rentals={rentals}
           onUpdateRepresentatives={setRepresentatives}
           onUpdateUnits={setUnitsByPrincipal}
+          onRestoreBackup={(r, reps, units) => {
+            setRentals(r);
+            setRepresentatives(reps);
+            setUnitsByPrincipal(units);
+          }}
           onClose={() => setShowStaffManager(false)}
         />
       )}
