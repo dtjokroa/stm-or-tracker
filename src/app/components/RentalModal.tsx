@@ -38,14 +38,14 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const filteredUnits = unitsByPrincipal[principalId] ?? [];
 
   const canSave =
-    principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd && representativeId;
+    principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSave) return;
 
     const unit = filteredUnits.find((u) => u.id === unitId)!;
-    const representative = representatives.find((c) => c.id === representativeId)!;
+    const representative = representatives.find((c) => c.id === representativeId);
     const now = new Date().toISOString();
 
     onSave({
@@ -61,8 +61,8 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
       rentalStart,
       rentalEnd: rentalEnd < rentalStart ? rentalStart : rentalEnd,
       status: status as Rental["status"],
-      representativeId: representative.id,
-      representativeName: representative.name,
+      representativeId: representative?.id ?? "",
+      representativeName: representative?.name ?? "",
       notes: notes.trim(),
       createdAt: rental?.createdAt ?? now,
       updatedAt: now,
@@ -219,7 +219,7 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
           {/* Representative */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-              Representative (PIC) *
+              Representative (PIC)
             </label>
             <div className="relative">
               <User size={15} className="absolute left-3 top-3 text-gray-400" />
@@ -227,8 +227,8 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
                 value={representativeId}
                 onChange={(e) => setRepresentativeId(e.target.value)}
                 className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                required
               >
+                <option value="">— None —</option>
                 {representatives.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} — {c.role}
