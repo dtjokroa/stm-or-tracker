@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Calendar, Building2, User, Stethoscope, ChevronDown } from "lucide-react";
-import type { Companion, Rental, UnitsByPrincipal } from "@/app/lib/data";
+import type { Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
 import {
   PRINCIPAL_ID,
   RENTAL_STATUSES,
@@ -13,14 +13,14 @@ import {
 interface Props {
   rental?: Rental | null;
   unitsByPrincipal: UnitsByPrincipal;
-  companions: Companion[];
+  representatives: Representative[];
   onSave: (rental: Rental) => void;
   onClose: () => void;
 }
 
 const today = () => fmt(new Date());
 
-export default function RentalModal({ rental, unitsByPrincipal, companions, onSave, onClose }: Props) {
+export default function RentalModal({ rental, unitsByPrincipal, representatives, onSave, onClose }: Props) {
   const isEdit = Boolean(rental);
 
   const principalId = PRINCIPAL_ID;
@@ -32,20 +32,20 @@ export default function RentalModal({ rental, unitsByPrincipal, companions, onSa
   const [rentalStart, setRentalStart] = useState(rental?.rentalStart ?? today());
   const [rentalEnd, setRentalEnd] = useState(rental?.rentalEnd ?? today());
   const [status, setStatus] = useState(rental?.status ?? "scheduled");
-  const [companionId, setCompanionId] = useState(rental?.companionId ?? companions[0]?.id ?? "");
+  const [representativeId, setRepresentativeId] = useState(rental?.representativeId ?? representatives[0]?.id ?? "");
   const [notes, setNotes] = useState(rental?.notes ?? "");
 
   const filteredUnits = unitsByPrincipal[principalId] ?? [];
 
   const canSave =
-    principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd && companionId;
+    principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd && representativeId;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSave) return;
 
     const unit = filteredUnits.find((u) => u.id === unitId)!;
-    const companion = companions.find((c) => c.id === companionId)!;
+    const representative = representatives.find((c) => c.id === representativeId)!;
     const now = new Date().toISOString();
 
     onSave({
@@ -61,8 +61,8 @@ export default function RentalModal({ rental, unitsByPrincipal, companions, onSa
       rentalStart,
       rentalEnd: rentalEnd < rentalStart ? rentalStart : rentalEnd,
       status: status as Rental["status"],
-      companionId: companion.id,
-      companionName: companion.name,
+      representativeId: representative.id,
+      representativeName: representative.name,
       notes: notes.trim(),
       createdAt: rental?.createdAt ?? now,
       updatedAt: now,
@@ -216,20 +216,20 @@ export default function RentalModal({ rental, unitsByPrincipal, companions, onSa
             </div>
           </div>
 
-          {/* Companion */}
+          {/* Representative */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-              Accompanying Person (PIC) *
+              Representative (PIC) *
             </label>
             <div className="relative">
               <User size={15} className="absolute left-3 top-3 text-gray-400" />
               <select
-                value={companionId}
-                onChange={(e) => setCompanionId(e.target.value)}
+                value={representativeId}
+                onChange={(e) => setRepresentativeId(e.target.value)}
                 className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
                 required
               >
-                {companions.map((c) => (
+                {representatives.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} — {c.role}
                   </option>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Search, Calendar, Building2, User, ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
-import type { Companion, Rental } from "@/app/lib/data";
+import type { Representative, Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
   fmtDisplayShort,
@@ -19,12 +19,12 @@ type FilterTab = "all" | "today" | "active" | "upcoming" | "completed";
 
 interface Props {
   rentals: Rental[];
-  companions: Companion[];
+  representatives: Representative[];
   onEdit: (rental: Rental) => void;
   onDelete: (rentalId: string) => void;
 }
 
-export default function ListView({ rentals, companions, onEdit, onDelete }: Props) {
+export default function ListView({ rentals, representatives, onEdit, onDelete }: Props) {
   const [tab, setTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
   const [sortAsc, setSortAsc] = useState(false);
@@ -46,7 +46,7 @@ export default function ListView({ rentals, companions, onEdit, onDelete }: Prop
         (r) =>
           r.unitLabel.toLowerCase().includes(q) ||
           r.hospitalName.toLowerCase().includes(q) ||
-          r.companionName.toLowerCase().includes(q) ||
+          r.representativeName.toLowerCase().includes(q) ||
           r.surgeonName.toLowerCase().includes(q) ||
           r.procedure.toLowerCase().includes(q) ||
           r.notes.toLowerCase().includes(q)
@@ -113,7 +113,7 @@ export default function ListView({ rentals, companions, onEdit, onDelete }: Prop
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search unit, hospital, companion..."
+            placeholder="Search unit, hospital, representative..."
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -159,7 +159,7 @@ function RentalListItem({
   onDelete,
 }: {
   rental: Rental;
-  principal?: { color: string };
+  principal?: { color: string; name?: string };
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
@@ -210,7 +210,7 @@ function RentalListItem({
             </span>
             <span className="flex items-center gap-1">
               <User size={11} />
-              <strong className="text-gray-700">{rental.companionName}</strong>
+              <strong className="text-gray-700">{rental.representativeName}</strong>
             </span>
             <span className="flex items-center gap-1">
               <Calendar size={11} />

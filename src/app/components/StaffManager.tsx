@@ -2,27 +2,27 @@
 
 import { useState } from "react";
 import { Plus, Trash2, UserCheck, Pencil, X, Check } from "lucide-react";
-import type { Companion, Unit, UnitsByPrincipal } from "@/app/lib/data";
-import { COMPANION_ROLES, PRINCIPAL_ID, PRINCIPALS, uid } from "@/app/lib/data";
+import type { Representative, Unit, UnitsByPrincipal } from "@/app/lib/data";
+import { REPRESENTATIVE_ROLES, PRINCIPAL_ID, PRINCIPALS, uid } from "@/app/lib/data";
 
 interface Props {
-  companions: Companion[];
+  representatives: Representative[];
   unitsByPrincipal: UnitsByPrincipal;
-  onUpdateCompanions: (companions: Companion[]) => void;
+  onUpdateRepresentatives: (representatives: Representative[]) => void;
   onUpdateUnits: (units: UnitsByPrincipal) => void;
   onClose: () => void;
 }
 
-type Tab = "companions" | "units";
+type Tab = "representatives" | "units";
 
 export default function StaffManager({
-  companions,
+  representatives,
   unitsByPrincipal,
-  onUpdateCompanions,
+  onUpdateRepresentatives,
   onUpdateUnits,
   onClose,
 }: Props) {
-  const [tab, setTab] = useState<Tab>("companions");
+  const [tab, setTab] = useState<Tab>("representatives");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -37,7 +37,7 @@ export default function StaffManager({
 
         {/* Tabs */}
         <div className="flex border-b border-gray-100 flex-shrink-0">
-          {(["companions", "units"] as Tab[]).map((t) => (
+          {(["representatives", "units"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -53,8 +53,8 @@ export default function StaffManager({
         </div>
 
         <div className="overflow-y-auto flex-1 p-6">
-          {tab === "companions" && (
-            <CompanionsTab companions={companions} onUpdate={onUpdateCompanions} />
+          {tab === "representatives" && (
+            <RepresentativesTab representatives={representatives} onUpdate={onUpdateRepresentatives} />
           )}
           {tab === "units" && (
             <UnitsTab unitsByPrincipal={unitsByPrincipal} onUpdate={onUpdateUnits} />
@@ -65,38 +65,38 @@ export default function StaffManager({
   );
 }
 
-// ── Companions Tab ────────────────────────────────────────────────
+// ── Representatives Tab ───────────────────────────────────────────
 
-function CompanionsTab({
-  companions,
+function RepresentativesTab({
+  representatives,
   onUpdate,
 }: {
-  companions: Companion[];
-  onUpdate: (companions: Companion[]) => void;
+  representatives: Representative[];
+  onUpdate: (representatives: Representative[]) => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
-  const [newRole, setNewRole] = useState<Companion["role"]>("Field Specialist");
+  const [newRole, setNewRole] = useState<Representative["role"]>("Field Specialist");
   const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState<Companion["role"]>("Field Specialist");
+  const [editRole, setEditRole] = useState<Representative["role"]>("Field Specialist");
 
-  function addCompanion() {
+  function addRepresentative() {
     if (!newName.trim()) return;
-    const companion: Companion = {
+    const representative: Representative = {
       id: uid(),
       name: newName.trim(),
       role: newRole,
     };
-    onUpdate([...companions, companion]);
+    onUpdate([...representatives, representative]);
     setNewName("");
     setNewRole("Field Specialist");
   }
 
-  function removeCompanion(id: string) {
-    onUpdate(companions.filter((c) => c.id !== id));
+  function removeRepresentative(id: string) {
+    onUpdate(representatives.filter((c) => c.id !== id));
   }
 
-  function startEdit(c: Companion) {
+  function startEdit(c: Representative) {
     setEditingId(c.id);
     setEditName(c.name);
     setEditRole(c.role);
@@ -104,14 +104,14 @@ function CompanionsTab({
 
   function saveEdit() {
     if (!editName.trim() || !editingId) return;
-    onUpdate(companions.map((c) => c.id === editingId ? { ...c, name: editName.trim(), role: editRole } : c));
+    onUpdate(representatives.map((c) => c.id === editingId ? { ...c, name: editName.trim(), role: editRole } : c));
     setEditingId(null);
   }
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-gray-500 mb-4">
-        People who accompany rented units in the OR.
+        Representatives who accompany rented units in the OR.
       </p>
 
       {/* Add new */}
@@ -120,21 +120,21 @@ function CompanionsTab({
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addCompanion()}
+          onKeyDown={(e) => e.key === "Enter" && addRepresentative()}
           placeholder="Name"
           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={newRole}
-          onChange={(e) => setNewRole(e.target.value as Companion["role"])}
+          onChange={(e) => setNewRole(e.target.value as Representative["role"])}
           className="px-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
-          {COMPANION_ROLES.map((r) => (
+          {REPRESENTATIVE_ROLES.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
         <button
-          onClick={addCompanion}
+          onClick={addRepresentative}
           disabled={!newName.trim()}
           className="p-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg transition-colors"
         >
@@ -144,7 +144,7 @@ function CompanionsTab({
 
       {/* List */}
       <div className="space-y-1.5">
-        {companions.map((c) =>
+        {representatives.map((c) =>
           editingId === c.id ? (
             <div key={c.id} className="flex gap-2 items-center bg-blue-50 rounded-lg p-2">
               <input
@@ -156,10 +156,10 @@ function CompanionsTab({
               />
               <select
                 value={editRole}
-                onChange={(e) => setEditRole(e.target.value as Companion["role"])}
+                onChange={(e) => setEditRole(e.target.value as Representative["role"])}
                 className="px-2 py-1.5 border border-blue-200 rounded text-sm focus:outline-none bg-white"
               >
-                {COMPANION_ROLES.map((r) => (
+                {REPRESENTATIVE_ROLES.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </select>
@@ -188,7 +188,7 @@ function CompanionsTab({
               </button>
               <button
                 onClick={() => {
-                  if (confirm(`Remove ${c.name}?`)) removeCompanion(c.id);
+                  if (confirm(`Remove ${c.name}?`)) removeRepresentative(c.id);
                 }}
                 className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
               >

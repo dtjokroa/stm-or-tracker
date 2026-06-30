@@ -29,14 +29,14 @@ export function normalizeStatus(value?: string | null): RentalStatus {
   return "scheduled";
 }
 
-export type CompanionRole =
+export type RepresentativeRole =
   | "Field Specialist"
   | "Product Specialist"
   | "Biomedical Engineer"
   | "Technician"
   | "Sales";
 
-export const COMPANION_ROLES: CompanionRole[] = [
+export const REPRESENTATIVE_ROLES: RepresentativeRole[] = [
   "Field Specialist",
   "Product Specialist",
   "Biomedical Engineer",
@@ -44,10 +44,10 @@ export const COMPANION_ROLES: CompanionRole[] = [
   "Sales",
 ];
 
-export interface Companion {
+export interface Representative {
   id: string;
   name: string;
-  role: CompanionRole;
+  role: RepresentativeRole;
 }
 
 export interface Rental {
@@ -63,8 +63,8 @@ export interface Rental {
   rentalStart: string;
   rentalEnd: string;
   status: RentalStatus;
-  companionId: string;
-  companionName: string;
+  representativeId: string;
+  representativeName: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -89,7 +89,7 @@ export const DEFAULT_UNITS: UnitsByPrincipal = {
   principal: [],
 };
 
-export const DEFAULT_COMPANIONS: Companion[] = [];
+export const DEFAULT_REPRESENTATIVES: Representative[] = [];
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -170,7 +170,7 @@ export function getStatusMeta(status: RentalStatus) {
 
 export const STORAGE_KEYS = {
   rentals: "or-rentals",
-  companions: "or-companions",
+  representatives: "or-representatives",
   units: "or-units",
 } as const;
 

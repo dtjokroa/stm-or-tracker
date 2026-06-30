@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Activity, Clock, CheckCircle, AlertCircle, User, Building2, ArrowRight } from "lucide-react";
-import type { Companion, Rental } from "@/app/lib/data";
+import type { Representative, Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
   fmtDisplayShort,
@@ -16,11 +16,11 @@ import {
 
 interface Props {
   rentals: Rental[];
-  companions: Companion[];
+  representatives: Representative[];
   onEditRental: (rental: Rental) => void;
 }
 
-export default function Dashboard({ rentals, companions, onEditRental }: Props) {
+export default function Dashboard({ rentals, representatives, onEditRental }: Props) {
   const today = todayStr();
 
   const todayRentals = useMemo(
@@ -41,11 +41,11 @@ export default function Dashboard({ rentals, companions, onEditRental }: Props) 
   const scheduledCount = rentals.filter((r) => r.status === "scheduled").length;
   const completedCount = rentals.filter((r) => r.status === "completed").length;
 
-  // Companion utilization: who has active rentals today
-  const activeCompanions = useMemo(() => {
-    const companionIds = new Set(todayRentals.map((r) => r.companionId));
-    return companions.filter((c) => companionIds.has(c.id));
-  }, [todayRentals, companions]);
+  // Representative utilization: who has active rentals today
+  const activeRepresentatives = useMemo(() => {
+    const representativeIds = new Set(todayRentals.map((r) => r.representativeId));
+    return representatives.filter((c) => representativeIds.has(c.id));
+  }, [todayRentals, representatives]);
 
   return (
     <div className="space-y-6">
@@ -73,7 +73,7 @@ export default function Dashboard({ rentals, companions, onEditRental }: Props) 
           icon={<User size={18} className="text-blue-600" />}
           bg="bg-blue-50"
           label="In Field Today"
-          value={activeCompanions.length}
+          value={activeRepresentatives.length}
         />
       </div>
 
@@ -93,12 +93,12 @@ export default function Dashboard({ rentals, companions, onEditRental }: Props) 
         ))}
       </Section>
 
-      {/* Active companions */}
-      {activeCompanions.length > 0 && (
-        <Section title="Field Team Today" count={activeCompanions.length}>
+      {/* Active representatives */}
+      {activeRepresentatives.length > 0 && (
+        <Section title="Field Team Today" count={activeRepresentatives.length}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {activeCompanions.map((c) => {
-              const their = todayRentals.filter((r) => r.companionId === c.id);
+            {activeRepresentatives.map((c) => {
+              const their = todayRentals.filter((r) => r.representativeId === c.id);
               return (
                 <div key={c.id} className="bg-gray-50 rounded-xl p-3">
                   <div className="flex items-center gap-2 mb-1.5">
@@ -231,7 +231,7 @@ function RentalCard({
             </span>
             <span className="flex items-center gap-1">
               <User size={11} />
-              <strong className="text-gray-700">{rental.companionName}</strong>
+              <strong className="text-gray-700">{rental.representativeName}</strong>
             </span>
           </div>
           {!compact && rental.procedure && (

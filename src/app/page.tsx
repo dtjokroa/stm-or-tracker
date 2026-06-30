@@ -12,8 +12,8 @@ import {
   Loader2,
   Activity,
 } from "lucide-react";
-import type { Companion, Rental, UnitsByPrincipal } from "@/app/lib/data";
-import { DEFAULT_UNITS, DEFAULT_COMPANIONS, todayStr } from "@/app/lib/data";
+import type { Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
+import { DEFAULT_UNITS, DEFAULT_REPRESENTATIVES, todayStr } from "@/app/lib/data";
 import type { AppState, LoadResult, StorageStatus } from "@/app/lib/persistence";
 import { loadInitialState, persistState } from "@/app/lib/persistence";
 import Dashboard from "@/app/components/Dashboard";
@@ -27,7 +27,7 @@ type View = "dashboard" | "calendar" | "list";
 export default function Home() {
   const [view, setView] = useState<View>("dashboard");
   const [rentals, setRentals] = useState<Rental[]>([]);
-  const [companions, setCompanions] = useState<Companion[]>(DEFAULT_COMPANIONS);
+  const [representatives, setRepresentatives] = useState<Representative[]>(DEFAULT_REPRESENTATIVES);
   const [unitsByPrincipal, setUnitsByPrincipal] = useState<UnitsByPrincipal>(DEFAULT_UNITS);
   const [storageStatus, setStorageStatus] = useState<StorageStatus>("local");
   const [persistEnabled, setPersistEnabled] = useState(true);
@@ -42,7 +42,7 @@ export default function Home() {
   useEffect(() => {
     loadInitialState().then((result: LoadResult) => {
       setRentals(result.state.rentals);
-      setCompanions(result.state.companions);
+      setRepresentatives(result.state.representatives);
       setUnitsByPrincipal(result.state.unitsByPrincipal);
       setStorageStatus(result.storageStatus);
       setPersistEnabled(result.persistEnabled);
@@ -62,11 +62,11 @@ export default function Home() {
   useEffect(() => {
     if (loading) return;
     const t = setTimeout(
-      () => save({ rentals, companions, unitsByPrincipal }),
+      () => save({ rentals, representatives, unitsByPrincipal }),
       400
     );
     return () => clearTimeout(t);
-  }, [rentals, companions, unitsByPrincipal, loading, save]);
+  }, [rentals, representatives, unitsByPrincipal, loading, save]);
 
   function openAddRental(date?: string) {
     setEditingRental(null);
@@ -197,7 +197,7 @@ export default function Home() {
         {view === "dashboard" && (
           <Dashboard
             rentals={rentals}
-            companions={companions}
+            representatives={representatives}
             onEditRental={openEditRental}
           />
         )}
@@ -213,7 +213,7 @@ export default function Home() {
         {view === "list" && (
           <ListView
             rentals={rentals}
-            companions={companions}
+            representatives={representatives}
             onEdit={openEditRental}
             onDelete={handleDeleteRental}
           />
@@ -225,7 +225,7 @@ export default function Home() {
         <RentalModal
           rental={editingRental}
           unitsByPrincipal={unitsByPrincipal}
-          companions={companions}
+          representatives={representatives}
           onSave={handleSaveRental}
           onClose={() => setShowRentalModal(false)}
         />
@@ -234,9 +234,9 @@ export default function Home() {
       {/* Staff & unit manager */}
       {showStaffManager && (
         <StaffManager
-          companions={companions}
+          representatives={representatives}
           unitsByPrincipal={unitsByPrincipal}
-          onUpdateCompanions={setCompanions}
+          onUpdateRepresentatives={setRepresentatives}
           onUpdateUnits={setUnitsByPrincipal}
           onClose={() => setShowStaffManager(false)}
         />

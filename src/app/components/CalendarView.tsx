@@ -136,9 +136,9 @@ export default function CalendarView({
                         onClick={(e) => { e.stopPropagation(); onEditRental(r); }}
                         className="text-left truncate text-[10px] font-medium px-1.5 py-0.5 rounded text-white leading-tight"
                         style={{ backgroundColor: principal?.color ?? "#6b7280" }}
-                        title={`${r.unitLabel} @ ${r.hospitalName} — ${r.companionName}`}
+                        title={`${r.unitLabel} @ ${r.hospitalName} — ${r.representativeName}`}
                       >
-                        {r.companionName}
+                        {r.representativeName}
                       </button>
                     );
                   })}
@@ -223,7 +223,7 @@ function RentalCard({
           </p>
           <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
             <span>
-              👤 <strong>{rental.companionName}</strong>
+              👤 <strong>{rental.representativeName}</strong>
             </span>
             {rental.surgeonName && <span>🔪 {rental.surgeonName}</span>}
             {rental.procedure && <span>📋 {rental.procedure}</span>}

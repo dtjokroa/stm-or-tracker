@@ -1,6 +1,6 @@
-import type { Companion, Rental, Unit, UnitsByPrincipal } from "@/app/lib/data";
+import type { Representative, Rental, Unit, UnitsByPrincipal } from "@/app/lib/data";
 import {
-  COMPANION_ROLES,
+  REPRESENTATIVE_ROLES,
   DEFAULT_UNITS,
   PRINCIPALS,
   STORAGE_KEYS,
@@ -32,7 +32,7 @@ interface RentalRow {
   updated_at: string;
 }
 
-interface CompanionRow {
+interface RepresentativeRow {
   id: string;
   name: string;
   role: string;
@@ -50,7 +50,7 @@ interface UnitRow {
 
 export interface AppState {
   rentals: Rental[];
-  companions: Companion[];
+  representatives: Representative[];
   unitsByPrincipal: UnitsByPrincipal;
 }
 
@@ -64,7 +64,7 @@ export interface LoadResult {
 
 const DEFAULT_STATE: AppState = {
   rentals: [],
-  companions: [],
+  representatives: [],
   unitsByPrincipal: DEFAULT_UNITS,
 };
 
@@ -139,19 +139,19 @@ async function isSchemaReady(
 async function loadFromSupabase(
   supabase: ReturnType<typeof getSupabaseClient>
 ): Promise<AppState> {
-  const [rentalsRes, companionsRes, unitsRes] = await Promise.all([
+  const [rentalsRes, representativesRes, unitsRes] = await Promise.all([
     supabase.from("rentals").select("*").order("rental_start", { ascending: false }),
     supabase.from("companions").select("*").order("name"),
     supabase.from("units").select("*"),
   ]);
 
   if (rentalsRes.error) throw rentalsRes.error;
-  if (companionsRes.error) throw companionsRes.error;
+  if (representativesRes.error) throw representativesRes.error;
   if (unitsRes.error) throw unitsRes.error;
 
   return {
     rentals: (rentalsRes.data as RentalRow[]).map(rowToRental),
-    companions: normalizeCompanions((companionsRes.data as CompanionRow[]).map(rowToCompanion)),
+    representatives: normalizeRepresentatives((representativesRes.data as RepresentativeRow[]).map(rowToRepresentative)),
     unitsByPrincipal: rowsToUnitsByPrincipal((unitsRes.data as UnitRow[]) ?? []),
   };
 }
@@ -163,7 +163,7 @@ async function syncToSupabase(
   state: AppState
 ): Promise<void> {
   const rentalRows = state.rentals.map(rentalToRow);
-  const companionRows = normalizeCompanions(state.companions).map(companionToRow);
+  const representativeRows = normalizeRepresentatives(state.representatives).map(representativeToRow);
   const unitRows = flattenUnits(state.unitsByPrincipal);
 
   // Rentals
@@ -173,12 +173,12 @@ async function syncToSupabase(
   }
   await deleteStale(supabase, "rentals", "id", rentalRows.map((r) => r.id));
 
-  // Companions
-  if (companionRows.length) {
-    const { error } = await supabase.from("companions").upsert(companionRows, { onConflict: "id" });
+  // Representatives (stored in companions table)
+  if (representativeRows.length) {
+    const { error } = await supabase.from("companions").upsert(representativeRows, { onConflict: "id" });
     if (error) throw error;
   }
-  await deleteStale(supabase, "companions", "id", companionRows.map((r) => r.id));
+  await deleteStale(supabase, "companions", "id", representativeRows.map((r) => r.id));
 
   // Units
   if (unitRows.length) {
@@ -220,8 +220,8 @@ function rentalToRow(r: Rental): RentalRow {
     rental_start: r.rentalStart,
     rental_end: r.rentalEnd,
     status: r.status,
-    companion_id: r.companionId,
-    companion_name: r.companionName,
+    companion_id: r.representativeId,
+    companion_name: r.representativeName,
     notes: r.notes,
     created_at: r.createdAt,
     updated_at: r.updatedAt,
@@ -242,21 +242,21 @@ function rowToRental(row: RentalRow): Rental {
     rentalStart: row.rental_start,
     rentalEnd: row.rental_end,
     status: normalizeStatus(row.status),
-    companionId: row.companion_id,
-    companionName: row.companion_name,
+    representativeId: row.companion_id,
+    representativeName: row.companion_name,
     notes: row.notes ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function companionToRow(c: Companion): CompanionRow {
+function representativeToRow(c: Representative): RepresentativeRow {
   return { id: c.id, name: c.name, role: c.role };
 }
 
-function rowToCompanion(row: CompanionRow): Companion {
-  const role = COMPANION_ROLES.includes(row.role as typeof COMPANION_ROLES[number])
-    ? (row.role as typeof COMPANION_ROLES[number])
+function rowToRepresentative(row: RepresentativeRow): Representative {
+  const role = REPRESENTATIVE_ROLES.includes(row.role as typeof REPRESENTATIVE_ROLES[number])
+    ? (row.role as typeof REPRESENTATIVE_ROLES[number])
     : "Field Specialist";
   return { id: row.id, name: row.name, role };
 }
@@ -291,14 +291,14 @@ function rowsToUnitsByPrincipal(rows: UnitRow[]): UnitsByPrincipal {
 function loadFromLocalStorage(): AppState {
   return {
     rentals: loadFromStorage<Rental[]>(STORAGE_KEYS.rentals, []).map(normalizeRental),
-    companions: normalizeCompanions(loadFromStorage<Companion[]>(STORAGE_KEYS.companions, [])),
+    representatives: normalizeRepresentatives(loadFromStorage<Representative[]>(STORAGE_KEYS.representatives, [])),
     unitsByPrincipal: loadFromStorage<UnitsByPrincipal>(STORAGE_KEYS.units, DEFAULT_UNITS),
   };
 }
 
 function saveToLocalStorage(state: AppState): void {
   saveToStorage(STORAGE_KEYS.rentals, state.rentals);
-  saveToStorage(STORAGE_KEYS.companions, state.companions);
+  saveToStorage(STORAGE_KEYS.representatives, state.representatives);
   saveToStorage(STORAGE_KEYS.units, state.unitsByPrincipal);
 }
 
@@ -308,10 +308,10 @@ function normalizeRental(r: Rental): Rental {
   return { ...r, status: normalizeStatus(r.status), notes: r.notes ?? "" };
 }
 
-function normalizeCompanions(input: Companion[]): Companion[] {
+function normalizeRepresentatives(input: Representative[]): Representative[] {
   return input.map((c) => ({
     ...c,
-    role: COMPANION_ROLES.includes(c.role as typeof COMPANION_ROLES[number])
+    role: REPRESENTATIVE_ROLES.includes(c.role as typeof REPRESENTATIVE_ROLES[number])
       ? c.role
       : "Field Specialist",
   }));
