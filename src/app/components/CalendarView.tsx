@@ -33,6 +33,19 @@ export default function CalendarView({
   const firstDay = getFirstDayOfMonth(year, month);
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
+  // Prev / next month helpers
+  const prevMonthYear = month === 0 ? year - 1 : year;
+  const prevMonthIdx  = month === 0 ? 11 : month - 1;
+  const nextMonthYear = month === 11 ? year + 1 : year;
+  const nextMonthIdx  = month === 11 ? 0 : month + 1;
+  const daysInPrevMonth = getDaysInMonth(prevMonthYear, prevMonthIdx);
+
+  // Trailing cells needed to complete the last row
+  const totalCells = firstDay + daysInMonth;
+  const trailingCount = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+
+  function pad2(n: number) { return String(n).padStart(2, "0"); }
+
   const prevMonth = () => {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
     else setMonth(m => m - 1);
@@ -49,7 +62,11 @@ export default function CalendarView({
   }
 
   function dayStr(day: number): string {
-    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return `${year}-${pad2(month + 1)}-${pad2(day)}`;
+  }
+
+  function overflowDayStr(y: number, m: number, d: number): string {
+    return `${y}-${pad2(m + 1)}-${pad2(d)}`;
   }
 
   const selectedRentals = selectedDay ? getRentalsForDay(selectedDay) : [];
@@ -85,13 +102,21 @@ export default function CalendarView({
 
         {/* Days grid */}
         <div className="grid grid-cols-7">
-          {/* Empty cells before month start */}
-          {Array.from({ length: firstDay }).map((_, i) => (
-            <div
-              key={`empty-${i}`}
-              className="h-24 border-b border-r border-gray-200 bg-gray-50/50"
-            />
-          ))}
+          {/* Trailing days from previous month */}
+          {Array.from({ length: firstDay }).map((_, i) => {
+            const day = daysInPrevMonth - firstDay + 1 + i;
+            const ds = overflowDayStr(prevMonthYear, prevMonthIdx, day);
+            const overflowRentals = getRentalsForDay(ds);
+            return (
+              <OverflowCell
+                key={`prev-${i}`}
+                day={day}
+                colIdx={i}
+                rentals={overflowRentals}
+                onEdit={onEditRental}
+              />
+            );
+          })}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
@@ -160,6 +185,23 @@ export default function CalendarView({
               </div>
             );
           })}
+
+          {/* Leading days from next month */}
+          {Array.from({ length: trailingCount }).map((_, i) => {
+            const day = i + 1;
+            const ds = overflowDayStr(nextMonthYear, nextMonthIdx, day);
+            const overflowRentals = getRentalsForDay(ds);
+            const colIdx = (totalCells + i) % 7;
+            return (
+              <OverflowCell
+                key={`next-${i}`}
+                day={day}
+                colIdx={colIdx}
+                rentals={overflowRentals}
+                onEdit={onEditRental}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -193,6 +235,45 @@ export default function CalendarView({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function OverflowCell({
+  day,
+  colIdx,
+  rentals,
+  onEdit,
+}: {
+  day: number;
+  colIdx: number;
+  rentals: Rental[];
+  onEdit: (r: Rental) => void;
+}) {
+  return (
+    <div
+      className={`h-24 border-b border-gray-200 flex flex-col bg-gray-50/60 ${
+        colIdx < 6 ? "border-r border-gray-200" : ""
+      }`}
+    >
+      <div className="px-1.5 pt-1.5 mb-0.5">
+        <span className="text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full text-gray-300">
+          {day}
+        </span>
+      </div>
+      <div className="flex flex-col gap-0.5 overflow-hidden">
+        {rentals.slice(0, 3).map((r) => (
+          <button
+            key={r.id}
+            onClick={() => onEdit(r)}
+            className={`text-left text-[10px] font-medium py-0.5 leading-tight overflow-hidden whitespace-nowrap opacity-50 mx-1.5 rounded-sm px-1.5 ${
+              r.caseType === "rep-only" ? "bg-teal-400 text-white" : "bg-blue-400 text-white"
+            }`}
+          >
+            {r.representativeName || r.hospitalName}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
