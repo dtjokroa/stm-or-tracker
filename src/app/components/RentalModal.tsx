@@ -24,7 +24,9 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const isEdit = Boolean(rental);
 
   const principalId = PRINCIPAL_ID;
-  const [unitId, setUnitId] = useState(rental?.unitId ?? "");
+  const filteredUnits = unitsByPrincipal[principalId] ?? [];
+
+  const [unitId, setUnitId] = useState(rental?.unitId ?? filteredUnits[0]?.id ?? "");
   const [hospitalName, setHospitalName] = useState(rental?.hospitalName ?? "");
   const [department, setDepartment] = useState(rental?.department ?? "OR");
   const [surgeonName, setSurgeonName] = useState(rental?.surgeonName ?? "");
@@ -32,10 +34,8 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const [rentalStart, setRentalStart] = useState(rental?.rentalStart ?? today());
   const [rentalEnd, setRentalEnd] = useState(rental?.rentalEnd ?? today());
   const [status, setStatus] = useState(rental?.status ?? "scheduled");
-  const [representativeId, setRepresentativeId] = useState(rental?.representativeId ?? representatives[0]?.id ?? "");
+  const [representativeId, setRepresentativeId] = useState(rental?.representativeId ?? "");
   const [notes, setNotes] = useState(rental?.notes ?? "");
-
-  const filteredUnits = unitsByPrincipal[principalId] ?? [];
 
   const canSave =
     principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd;
