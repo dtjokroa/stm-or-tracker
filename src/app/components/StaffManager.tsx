@@ -364,6 +364,9 @@ function UnitsTab({
   const selectedPrincipal = PRINCIPAL_ID;
   const [newName, setNewName] = useState("");
   const [newSerial, setNewSerial] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSerial, setEditSerial] = useState("");
 
   const currentUnits = unitsByPrincipal[selectedPrincipal] ?? [];
 
@@ -381,6 +384,30 @@ function UnitsTab({
     });
     setNewName("");
     setNewSerial("");
+  }
+
+  function startEdit(u: Unit) {
+    setEditingId(u.id);
+    setEditName(u.name);
+    setEditSerial(u.serial);
+  }
+
+  function saveEdit() {
+    if (!editName.trim() || !editSerial.trim() || !editingId) return;
+    onUpdate({
+      ...unitsByPrincipal,
+      [selectedPrincipal]: currentUnits.map((u) =>
+        u.id === editingId
+          ? {
+              id: editSerial.trim(),
+              name: editName.trim(),
+              serial: editSerial.trim(),
+              label: `${editName.trim()} (${editSerial.trim()})`,
+            }
+          : u
+      ),
+    });
+    setEditingId(null);
   }
 
   function removeUnit(unitId: string) {
@@ -425,29 +452,69 @@ function UnitsTab({
         </p>
       ) : (
         <div className="space-y-1.5">
-          {currentUnits.map((u) => (
-            <div
-              key={u.id}
-              className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-lg"
-            >
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: PRINCIPALS[0].color }}
-              />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-gray-800">{u.name}</span>
-                <span className="text-xs text-gray-400 ml-2 font-mono">{u.serial}</span>
+          {currentUnits.map((u) =>
+            editingId === u.id ? (
+              <div key={u.id} className="flex gap-2 items-center bg-blue-50 rounded-lg p-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Unit name"
+                  className="flex-1 px-2 py-1.5 border border-blue-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={editSerial}
+                  onChange={(e) => setEditSerial(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                  placeholder="Serial"
+                  className="w-24 px-2 py-1.5 border border-blue-200 rounded text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  onClick={saveEdit}
+                  disabled={!editName.trim() || !editSerial.trim()}
+                  className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={() => setEditingId(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                >
+                  <X size={14} />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  if (confirm(`Remove ${u.label}?`)) removeUnit(u.id);
-                }}
-                className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+            ) : (
+              <div
+                key={u.id}
+                className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-lg"
               >
-                <Trash2 size={13} />
-              </button>
-            </div>
-          ))}
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: PRINCIPALS[0].color }}
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-gray-800">{u.name}</span>
+                  <span className="text-xs text-gray-400 ml-2 font-mono">{u.serial}</span>
+                </div>
+                <button
+                  onClick={() => startEdit(u)}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                >
+                  <Pencil size={13} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Remove ${u.label}?`)) removeUnit(u.id);
+                  }}
+                  className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            )
+          )}
         </div>
       )}
     </div>
