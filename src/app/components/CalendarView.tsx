@@ -60,9 +60,9 @@ export default function CalendarView({
   return (
     <div className="flex flex-col gap-4">
       {/* Calendar */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Month nav */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
             <ChevronLeft size={18} className="text-gray-600" />
           </button>
@@ -75,9 +75,9 @@ export default function CalendarView({
         </div>
 
         {/* Day names */}
-        <div className="grid grid-cols-7 border-b border-gray-100">
+        <div className="grid grid-cols-7 border-b border-gray-200">
           {DAY_NAMES.map((d) => (
-            <div key={d} className="py-2 text-center text-xs font-medium text-gray-400">
+            <div key={d} className="py-2 text-center text-xs font-medium text-gray-500">
               {d}
             </div>
           ))}
@@ -87,7 +87,10 @@ export default function CalendarView({
         <div className="grid grid-cols-7">
           {/* Empty cells before month start */}
           {Array.from({ length: firstDay }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-20 border-b border-r border-gray-50 last:border-r-0" />
+            <div
+              key={`empty-${i}`}
+              className="h-24 border-b border-r border-gray-200 bg-gray-50/50"
+            />
           ))}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -102,17 +105,18 @@ export default function CalendarView({
               <div
                 key={day}
                 onClick={() => setSelectedDay(isSelected ? null : ds)}
-                className={`h-20 border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50 flex flex-col p-1.5 ${
-                  colIdx < 6 ? "border-r" : ""
+                className={`h-24 border-b border-gray-200 cursor-pointer transition-colors hover:bg-gray-50 flex flex-col ${
+                  colIdx < 6 ? "border-r border-gray-200" : ""
                 } ${isSelected ? "bg-blue-50 hover:bg-blue-50" : ""}`}
               >
-                <div className="flex items-center justify-between mb-1">
+                {/* Day number row */}
+                <div className="flex items-center justify-between px-1.5 pt-1.5 mb-0.5">
                   <span
                     className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${
                       isToday
                         ? "bg-blue-600 text-white"
                         : isSelected
-                        ? "text-blue-600"
+                        ? "text-blue-600 font-semibold"
                         : "text-gray-700"
                     }`}
                   >
@@ -121,25 +125,36 @@ export default function CalendarView({
                   {dayRentals.length === 0 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onAddRental(ds); }}
-                      className="opacity-0 hover:opacity-100 group-hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-blue-500 transition-opacity"
+                      className="opacity-0 hover:opacity-100 p-0.5 rounded text-gray-300 hover:text-blue-500 transition-opacity"
                     >
                       <Plus size={12} />
                     </button>
                   )}
                 </div>
+
+                {/* Spanning event bars */}
                 <div className="flex flex-col gap-0.5 overflow-hidden">
-                  {dayRentals.slice(0, 3).map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={(e) => { e.stopPropagation(); onEditRental(r); }}
-                      className={`text-left truncate text-[10px] font-medium px-1.5 py-0.5 rounded text-white leading-tight ${r.caseType === "rep-only" ? "bg-teal-500" : "bg-blue-500"}`}
-                      title={`${r.caseType === "rep-only" ? (r.equipmentNote || "Rep Only") : r.unitLabel} @ ${r.hospitalName}${r.representativeName ? " — " + r.representativeName : ""}`}
-                    >
-                      {r.representativeName || r.hospitalName}
-                    </button>
-                  ))}
+                  {dayRentals.slice(0, 3).map((r) => {
+                    const isStart = r.rentalStart === ds;
+                    const isEnd = r.rentalEnd === ds;
+                    const color = r.caseType === "rep-only" ? "bg-teal-500" : "bg-blue-500";
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={(e) => { e.stopPropagation(); onEditRental(r); }}
+                        title={`${r.caseType === "rep-only" ? (r.equipmentNote || "Rep Only") : r.unitLabel} @ ${r.hospitalName}${r.representativeName ? " — " + r.representativeName : ""}`}
+                        className={`text-left text-[10px] font-medium py-0.5 text-white leading-tight overflow-hidden whitespace-nowrap ${color} ${
+                          isStart ? "ml-1.5 rounded-l-sm pl-1.5" : "pl-1"
+                        } ${
+                          isEnd ? "mr-1.5 rounded-r-sm pr-1.5" : "pr-0"
+                        }`}
+                      >
+                        {isStart ? (r.representativeName || r.hospitalName) : "\u00a0"}
+                      </button>
+                    );
+                  })}
                   {dayRentals.length > 3 && (
-                    <span className="text-[10px] text-gray-400 px-1">+{dayRentals.length - 3} more</span>
+                    <span className="text-[10px] text-gray-400 px-1.5">+{dayRentals.length - 3}</span>
                   )}
                 </div>
               </div>
