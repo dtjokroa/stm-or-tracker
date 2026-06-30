@@ -166,6 +166,13 @@ async function syncToSupabase(
   const representativeRows = normalizeRepresentatives(state.representatives).map(representativeToRow);
   const unitRows = flattenUnits(state.unitsByPrincipal);
 
+  // Principals — must be upserted before units due to FK constraint
+  const principalRows = PRINCIPALS.map((p) => ({ id: p.id, name: p.name, color: p.color }));
+  if (principalRows.length) {
+    const { error } = await supabase.from("principals").upsert(principalRows, { onConflict: "id" });
+    if (error) throw error;
+  }
+
   // Rentals
   if (rentalRows.length) {
     const { error } = await supabase.from("rentals").upsert(rentalRows, { onConflict: "id" });
