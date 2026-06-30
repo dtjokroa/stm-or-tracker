@@ -89,11 +89,7 @@ export const DEFAULT_UNITS: UnitsByPrincipal = {
   principal: [],
 };
 
-export const DEFAULT_COMPANIONS: Companion[] = [
-  { id: "galih", name: "Galih", role: "Field Specialist" },
-  { id: "farhan", name: "Farhan", role: "Field Specialist" },
-  { id: "reza", name: "Reza", role: "Field Specialist" },
-];
+export const DEFAULT_COMPANIONS: Companion[] = [];
 
 // ── Helpers ────────────────────────────────────────────────────────
 

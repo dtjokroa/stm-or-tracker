@@ -1,7 +1,6 @@
 import type { Companion, Rental, Unit, UnitsByPrincipal } from "@/app/lib/data";
 import {
   COMPANION_ROLES,
-  DEFAULT_COMPANIONS,
   DEFAULT_UNITS,
   PRINCIPALS,
   STORAGE_KEYS,
@@ -65,7 +64,7 @@ export interface LoadResult {
 
 const DEFAULT_STATE: AppState = {
   rentals: [],
-  companions: DEFAULT_COMPANIONS,
+  companions: [],
   unitsByPrincipal: DEFAULT_UNITS,
 };
 
@@ -292,7 +291,7 @@ function rowsToUnitsByPrincipal(rows: UnitRow[]): UnitsByPrincipal {
 function loadFromLocalStorage(): AppState {
   return {
     rentals: loadFromStorage<Rental[]>(STORAGE_KEYS.rentals, []).map(normalizeRental),
-    companions: normalizeCompanions(loadFromStorage<Companion[]>(STORAGE_KEYS.companions, DEFAULT_COMPANIONS)),
+    companions: normalizeCompanions(loadFromStorage<Companion[]>(STORAGE_KEYS.companions, [])),
     unitsByPrincipal: loadFromStorage<UnitsByPrincipal>(STORAGE_KEYS.units, DEFAULT_UNITS),
   };
 }
@@ -310,15 +309,12 @@ function normalizeRental(r: Rental): Rental {
 }
 
 function normalizeCompanions(input: Companion[]): Companion[] {
-  const seen = new Set<string>();
-  const merged: Companion[] = [];
-  for (const c of [...DEFAULT_COMPANIONS, ...input]) {
-    if (!seen.has(c.id)) {
-      seen.add(c.id);
-      merged.push(c);
-    }
-  }
-  return merged;
+  return input.map((c) => ({
+    ...c,
+    role: COMPANION_ROLES.includes(c.role as typeof COMPANION_ROLES[number])
+      ? c.role
+      : "Field Specialist",
+  }));
 }
 
 function hasData(state: AppState): boolean {
