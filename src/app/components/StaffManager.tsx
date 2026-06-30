@@ -376,7 +376,8 @@ function CalendarFeedButton() {
   }
 
   function openInGoogleCalendar() {
-    const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`;
+    // Google Calendar's ?cid= parameter requires the webcal:// scheme
+    const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
     window.open(gcalUrl, "_blank");
   }
 
