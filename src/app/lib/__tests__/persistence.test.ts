@@ -27,7 +27,7 @@ interface RentalRow {
   unit_id: string; unit_label: string;
   serial: string; equipment_note: string; hospital_name: string; department: string;
   surgeon_name: string; procedure: string; rental_start: string;
-  rental_end: string; status: string; companion_id: string;
+  rental_end: string; start_time: string; end_time: string; status: string; companion_id: string;
   companion_name: string; notes: string; created_at: string; updated_at: string;
 }
 
@@ -42,7 +42,8 @@ function rentalToRow(r: Rental): RentalRow {
     equipment_note: r.equipmentNote ?? "",
     hospital_name: r.hospitalName, department: r.department,
     surgeon_name: r.surgeonName, procedure: r.procedure,
-    rental_start: r.rentalStart, rental_end: r.rentalEnd, status: r.status,
+    rental_start: r.rentalStart, rental_end: r.rentalEnd,
+    start_time: r.startTime ?? "", end_time: r.endTime ?? "", status: r.status,
     companion_id: r.representativeId, companion_name: r.representativeName,
     notes: r.notes, created_at: r.createdAt, updated_at: r.updatedAt,
   };
@@ -57,6 +58,7 @@ function rowToRental(row: RentalRow): Rental {
     hospitalName: row.hospital_name, department: row.department,
     surgeonName: row.surgeon_name, procedure: row.procedure,
     rentalStart: row.rental_start, rentalEnd: row.rental_end,
+    startTime: row.start_time ?? "", endTime: row.end_time ?? "",
     status: normalizeStatus(row.status),
     representativeId: row.companion_id, representativeName: row.companion_name,
     notes: row.notes ?? "", createdAt: row.created_at, updatedAt: row.updated_at,
@@ -110,7 +112,7 @@ const sampleRental: Rental = {
   unitId: "u1", unitLabel: "IOM-001 (SN001)",
   serial: "SN001", equipmentNote: "", hospitalName: "General Hospital", department: "OR",
   surgeonName: "Dr. Jones", procedure: "Spinal fusion", rentalStart: "2026-06-01",
-  rentalEnd: "2026-06-05", status: "in-or", representativeId: "rep1",
+  rentalEnd: "2026-06-05", startTime: "", endTime: "", status: "in-or", representativeId: "rep1",
   representativeName: "Alice", notes: "Handle with care",
   createdAt: "2026-06-01T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z",
 };
@@ -120,7 +122,7 @@ const sampleRentalRow: RentalRow = {
   unit_id: "u1", unit_label: "IOM-001 (SN001)",
   serial: "SN001", equipment_note: "", hospital_name: "General Hospital", department: "OR",
   surgeon_name: "Dr. Jones", procedure: "Spinal fusion", rental_start: "2026-06-01",
-  rental_end: "2026-06-05", status: "in-or", companion_id: "rep1",
+  rental_end: "2026-06-05", start_time: "", end_time: "", status: "in-or", companion_id: "rep1",
   companion_name: "Alice", notes: "Handle with care",
   created_at: "2026-06-01T00:00:00Z", updated_at: "2026-06-01T00:00:00Z",
 };

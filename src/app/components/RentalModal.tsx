@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Calendar, Building2, User, Stethoscope, ChevronDown, Package, UserCheck } from "lucide-react";
+import { X, Calendar, Clock, Building2, User, Stethoscope, ChevronDown, Package, UserCheck } from "lucide-react";
 import type { CaseType, Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
 import {
   PRINCIPAL_ID,
@@ -35,6 +35,8 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const [procedure, setProcedure] = useState(rental?.procedure ?? "");
   const [rentalStart, setRentalStart] = useState(rental?.rentalStart ?? today());
   const [rentalEnd, setRentalEnd] = useState(rental?.rentalEnd ?? today());
+  const [startTime, setStartTime] = useState(rental?.startTime ?? "");
+  const [endTime, setEndTime] = useState(rental?.endTime ?? "");
   const [status, setStatus] = useState(rental?.status ?? "scheduled");
   const [representativeId, setRepresentativeId] = useState(rental?.representativeId ?? "");
   const [notes, setNotes] = useState(rental?.notes ?? "");
@@ -68,6 +70,8 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
       procedure: procedure.trim(),
       rentalStart,
       rentalEnd: rentalEnd < rentalStart ? rentalStart : rentalEnd,
+      startTime,
+      endTime,
       status: status as Rental["status"],
       representativeId: representative?.id ?? "",
       representativeName: representative?.name ?? "",
@@ -241,7 +245,7 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
             </div>
           </div>
 
-          {/* Dates */}
+          {/* Dates + Times */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
@@ -271,6 +275,34 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
                   onChange={(e) => setRentalEnd(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                Start Time
+              </label>
+              <div className="relative">
+                <Clock size={15} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                End Time
+              </label>
+              <div className="relative">
+                <Clock size={15} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>

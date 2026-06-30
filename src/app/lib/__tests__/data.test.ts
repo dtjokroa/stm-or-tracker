@@ -46,6 +46,8 @@ function makeRental(overrides: Partial<Rental> = {}): Rental {
     procedure: "Craniotomy",
     rentalStart: "2026-06-01",
     rentalEnd: "2026-06-05",
+    startTime: "",
+    endTime: "",
     status: "scheduled",
     representativeId: "",
     representativeName: "",

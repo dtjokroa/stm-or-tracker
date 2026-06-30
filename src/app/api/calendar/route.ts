@@ -21,6 +21,16 @@ function nextDay(s: string): string {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 }
 
+/**
+ * Build a floating local datetime string (no Z, no TZID) from a date + HH:MM time.
+ * Floating time means the event appears at the given clock time in whatever
+ * timezone the calendar user is in — correct for single-region internal tools.
+ */
+function toICalDateTime(date: string, time: string): string {
+  const [hh, mm] = time.split(":");
+  return `${toICalDate(date)}T${hh}${mm}00`;
+}
+
 function escIcal(s: string): string {
   return (s ?? "")
     .replace(/\\/g, "\\\\")
@@ -82,11 +92,13 @@ export async function GET() {
   for (const row of data ?? []) {
     const isRepOnly = row.case_type === "rep-only";
 
+    const repPart = row.companion_name ? ` — ${row.companion_name}` : "";
     const summary = isRepOnly
-      ? `[Rep] ${row.equipment_note || "Client Equipment"} @ ${row.hospital_name}`
-      : `[Rental] ${row.unit_label} @ ${row.hospital_name}`;
+      ? `[Rep] ${row.equipment_note || "Client Equipment"} @ ${row.hospital_name}${repPart}`
+      : `[Rental] ${row.unit_label} @ ${row.hospital_name}${repPart}`;
 
     const descLines: string[] = [];
+    if (row.start_time) descLines.push(`Time: ${row.start_time}${row.end_time ? " – " + row.end_time : ""}`);
     if (row.companion_name) descLines.push(`Representative: ${row.companion_name}`);
     if (row.surgeon_name)   descLines.push(`Surgeon: ${row.surgeon_name}`);
     if (row.procedure)      descLines.push(`Procedure: ${row.procedure}`);
@@ -99,11 +111,18 @@ export async function GET() {
 
     const location = `${row.hospital_name}${row.department ? ` – ${row.department}` : ""}`;
 
+    const hasTimes = row.start_time && row.end_time;
+
     lines.push("BEGIN:VEVENT");
     lines.push(`UID:${row.id}@stm-iom-tracker`);
     lines.push(`DTSTAMP:${now}`);
-    lines.push(`DTSTART;VALUE=DATE:${toICalDate(row.rental_start)}`);
-    lines.push(`DTEND;VALUE=DATE:${nextDay(row.rental_end)}`);
+    if (hasTimes) {
+      lines.push(`DTSTART:${toICalDateTime(row.rental_start, row.start_time)}`);
+      lines.push(`DTEND:${toICalDateTime(row.rental_end, row.end_time)}`);
+    } else {
+      lines.push(`DTSTART;VALUE=DATE:${toICalDate(row.rental_start)}`);
+      lines.push(`DTEND;VALUE=DATE:${nextDay(row.rental_end)}`);
+    }
     lines.push(fold(`SUMMARY:${escIcal(summary)}`));
     lines.push(fold(`DESCRIPTION:${escIcal(descLines.join("\n"))}`));
     lines.push(fold(`LOCATION:${escIcal(location)}`));

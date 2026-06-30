@@ -66,6 +66,8 @@ export interface Rental {
   procedure: string;
   rentalStart: string;
   rentalEnd: string;
+  startTime: string;
+  endTime: string;
   status: RentalStatus;
   representativeId: string;
   representativeName: string;

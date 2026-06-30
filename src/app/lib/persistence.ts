@@ -26,6 +26,8 @@ interface RentalRow {
   procedure: string;
   rental_start: string;
   rental_end: string;
+  start_time: string;
+  end_time: string;
   status: string;
   companion_id: string;
   companion_name: string;
@@ -225,6 +227,8 @@ function rentalToRow(r: Rental): RentalRow {
     serial: r.serial,
     equipment_note: r.equipmentNote ?? "",
     hospital_name: r.hospitalName,
+    start_time: r.startTime ?? "",
+    end_time: r.endTime ?? "",
     department: r.department,
     surgeon_name: r.surgeonName,
     procedure: r.procedure,
@@ -249,6 +253,8 @@ function rowToRental(row: RentalRow): Rental {
     serial: row.serial,
     equipmentNote: row.equipment_note ?? "",
     hospitalName: row.hospital_name,
+    startTime: row.start_time ?? "",
+    endTime: row.end_time ?? "",
     department: row.department,
     surgeonName: row.surgeon_name,
     procedure: row.procedure,
@@ -324,6 +330,8 @@ function normalizeRental(r: Rental): Rental {
     notes: r.notes ?? "",
     caseType: r.caseType === "rep-only" ? "rep-only" : "rental",
     equipmentNote: r.equipmentNote ?? "",
+    startTime: r.startTime ?? "",
+    endTime: r.endTime ?? "",
   };
 }
 
