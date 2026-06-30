@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, Calendar, Building2, User, Stethoscope, ChevronDown } from "lucide-react";
-import type { Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
+import { X, Calendar, Building2, User, Stethoscope, ChevronDown, Package, UserCheck } from "lucide-react";
+import type { CaseType, Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
 import {
   PRINCIPAL_ID,
   RENTAL_STATUSES,
@@ -26,7 +26,9 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const principalId = PRINCIPAL_ID;
   const filteredUnits = unitsByPrincipal[principalId] ?? [];
 
+  const [caseType, setCaseType] = useState<CaseType>(rental?.caseType ?? "rental");
   const [unitId, setUnitId] = useState(rental?.unitId ?? filteredUnits[0]?.id ?? "");
+  const [equipmentNote, setEquipmentNote] = useState(rental?.equipmentNote ?? "");
   const [hospitalName, setHospitalName] = useState(rental?.hospitalName ?? "");
   const [department, setDepartment] = useState(rental?.department ?? "OR");
   const [surgeonName, setSurgeonName] = useState(rental?.surgeonName ?? "");
@@ -38,22 +40,28 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
   const [notes, setNotes] = useState(rental?.notes ?? "");
 
   const canSave =
-    principalId && unitId && hospitalName.trim() && rentalStart && rentalEnd;
+    principalId &&
+    hospitalName.trim() &&
+    rentalStart &&
+    rentalEnd &&
+    (caseType === "rep-only" || unitId);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSave) return;
 
-    const unit = filteredUnits.find((u) => u.id === unitId)!;
+    const unit = caseType === "rental" ? filteredUnits.find((u) => u.id === unitId) : undefined;
     const representative = representatives.find((c) => c.id === representativeId);
     const now = new Date().toISOString();
 
     onSave({
       id: rental?.id ?? uid(),
       principalId,
-      unitId: unit.id,
-      unitLabel: unit.label,
-      serial: unit.serial,
+      caseType,
+      unitId: unit?.id ?? "",
+      unitLabel: unit?.label ?? "",
+      serial: unit?.serial ?? "",
+      equipmentNote: caseType === "rep-only" ? equipmentNote.trim() : "",
       hospitalName: hospitalName.trim(),
       department: department.trim() || "OR",
       surgeonName: surgeonName.trim(),
@@ -73,15 +81,12 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 border-b border-gray-100"
-          style={{ borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}
-        >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              {isEdit ? "Edit Rental" : "New Rental"}
+              {isEdit ? "Edit Case" : "New Case"}
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">Track a unit in the OR</p>
+            <p className="text-sm text-gray-500 mt-0.5">Schedule a rental or representative deployment</p>
           </div>
           <button
             onClick={onClose}
@@ -92,31 +97,86 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
-          {/* Unit */}
+
+          {/* Case type toggle */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
-              Unit
+              Case Type
             </label>
-            <div className="relative">
-              <select
-                value={unitId}
-                onChange={(e) => setUnitId(e.target.value)}
-                className="w-full pl-3 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                disabled={filteredUnits.length === 0}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCaseType("rental")}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  caseType === "rental"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
               >
-                {filteredUnits.length === 0 ? (
-                  <option value="">No units — add them in Settings</option>
-                ) : (
-                  filteredUnits.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.label}
-                    </option>
-                  ))
-                )}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
+                <Package size={16} />
+                <div className="text-left">
+                  <p className="font-semibold leading-none">Equipment Rental</p>
+                  <p className="text-[10px] mt-0.5 font-normal opacity-70">Using STM equipment</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCaseType("rep-only")}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  caseType === "rep-only"
+                    ? "border-teal-500 bg-teal-50 text-teal-700"
+                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                <UserCheck size={16} />
+                <div className="text-left">
+                  <p className="font-semibold leading-none">Rep Deployment</p>
+                  <p className="text-[10px] mt-0.5 font-normal opacity-70">Client's own equipment</p>
+                </div>
+              </button>
             </div>
           </div>
+
+          {/* Unit (rental) OR Equipment note (rep-only) */}
+          {caseType === "rental" ? (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                Unit *
+              </label>
+              <div className="relative">
+                <select
+                  value={unitId}
+                  onChange={(e) => setUnitId(e.target.value)}
+                  className="w-full pl-3 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  disabled={filteredUnits.length === 0}
+                >
+                  {filteredUnits.length === 0 ? (
+                    <option value="">No units — add them in Settings</option>
+                  ) : (
+                    filteredUnits.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                Client's Equipment / Device
+              </label>
+              <input
+                type="text"
+                value={equipmentNote}
+                onChange={(e) => setEquipmentNote(e.target.value)}
+                placeholder="e.g. Medtronic IOM System (SN: ABC123)"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+          )}
 
           {/* Hospital + Department */}
           <div className="grid grid-cols-2 gap-3">
@@ -289,9 +349,13 @@ export default function RentalModal({ rental, unitsByPrincipal, representatives,
             <button
               type="submit"
               disabled={!canSave}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                caseType === "rep-only"
+                  ? "bg-teal-600 hover:bg-teal-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              {isEdit ? "Save Changes" : "Add Rental"}
+              {isEdit ? "Save Changes" : caseType === "rep-only" ? "Schedule Deployment" : "Add Rental"}
             </button>
           </div>
         </form>

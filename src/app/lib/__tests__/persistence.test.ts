@@ -23,8 +23,9 @@ import type { Rental, Representative, Unit, UnitsByPrincipal } from "@/app/lib/d
 // a failing test.
 
 interface RentalRow {
-  id: string; principal_id: string; unit_id: string; unit_label: string;
-  serial: string; hospital_name: string; department: string;
+  id: string; principal_id: string; case_type: string;
+  unit_id: string; unit_label: string;
+  serial: string; equipment_note: string; hospital_name: string; department: string;
   surgeon_name: string; procedure: string; rental_start: string;
   rental_end: string; status: string; companion_id: string;
   companion_name: string; notes: string; created_at: string; updated_at: string;
@@ -36,9 +37,11 @@ interface UnitRow { id: string; principal_id: string; name: string; serial: stri
 
 function rentalToRow(r: Rental): RentalRow {
   return {
-    id: r.id, principal_id: r.principalId, unit_id: r.unitId,
-    unit_label: r.unitLabel, serial: r.serial, hospital_name: r.hospitalName,
-    department: r.department, surgeon_name: r.surgeonName, procedure: r.procedure,
+    id: r.id, principal_id: r.principalId, case_type: r.caseType ?? "rental",
+    unit_id: r.unitId, unit_label: r.unitLabel, serial: r.serial,
+    equipment_note: r.equipmentNote ?? "",
+    hospital_name: r.hospitalName, department: r.department,
+    surgeon_name: r.surgeonName, procedure: r.procedure,
     rental_start: r.rentalStart, rental_end: r.rentalEnd, status: r.status,
     companion_id: r.representativeId, companion_name: r.representativeName,
     notes: r.notes, created_at: r.createdAt, updated_at: r.updatedAt,
@@ -47,9 +50,12 @@ function rentalToRow(r: Rental): RentalRow {
 
 function rowToRental(row: RentalRow): Rental {
   return {
-    id: row.id, principalId: row.principal_id, unitId: row.unit_id,
-    unitLabel: row.unit_label, serial: row.serial, hospitalName: row.hospital_name,
-    department: row.department, surgeonName: row.surgeon_name, procedure: row.procedure,
+    id: row.id, principalId: row.principal_id,
+    caseType: row.case_type === "rep-only" ? "rep-only" : "rental",
+    unitId: row.unit_id, unitLabel: row.unit_label, serial: row.serial,
+    equipmentNote: row.equipment_note ?? "",
+    hospitalName: row.hospital_name, department: row.department,
+    surgeonName: row.surgeon_name, procedure: row.procedure,
     rentalStart: row.rental_start, rentalEnd: row.rental_end,
     status: normalizeStatus(row.status),
     representativeId: row.companion_id, representativeName: row.companion_name,
@@ -100,8 +106,9 @@ function rowsToUnitsByPrincipal(rows: UnitRow[]): UnitsByPrincipal {
 // ─── Sample fixtures ──────────────────────────────────────────────
 
 const sampleRental: Rental = {
-  id: "r1", principalId: "principal", unitId: "u1", unitLabel: "IOM-001 (SN001)",
-  serial: "SN001", hospitalName: "General Hospital", department: "OR",
+  id: "r1", principalId: "principal", caseType: "rental",
+  unitId: "u1", unitLabel: "IOM-001 (SN001)",
+  serial: "SN001", equipmentNote: "", hospitalName: "General Hospital", department: "OR",
   surgeonName: "Dr. Jones", procedure: "Spinal fusion", rentalStart: "2026-06-01",
   rentalEnd: "2026-06-05", status: "in-or", representativeId: "rep1",
   representativeName: "Alice", notes: "Handle with care",
@@ -109,8 +116,9 @@ const sampleRental: Rental = {
 };
 
 const sampleRentalRow: RentalRow = {
-  id: "r1", principal_id: "principal", unit_id: "u1", unit_label: "IOM-001 (SN001)",
-  serial: "SN001", hospital_name: "General Hospital", department: "OR",
+  id: "r1", principal_id: "principal", case_type: "rental",
+  unit_id: "u1", unit_label: "IOM-001 (SN001)",
+  serial: "SN001", equipment_note: "", hospital_name: "General Hospital", department: "OR",
   surgeon_name: "Dr. Jones", procedure: "Spinal fusion", rental_start: "2026-06-01",
   rental_end: "2026-06-05", status: "in-or", companion_id: "rep1",
   companion_name: "Alice", notes: "Handle with care",

@@ -35,9 +35,11 @@ function makeRental(overrides: Partial<Rental> = {}): Rental {
   return {
     id: "test-id",
     principalId: "principal",
+    caseType: "rental",
     unitId: "u1",
     unitLabel: "IOM-001 (SN001)",
     serial: "SN001",
+    equipmentNote: "",
     hospitalName: "Test Hospital",
     department: "OR",
     surgeonName: "Dr. Smith",

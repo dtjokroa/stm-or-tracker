@@ -50,12 +50,16 @@ export interface Representative {
   role: RepresentativeRole;
 }
 
+export type CaseType = "rental" | "rep-only";
+
 export interface Rental {
   id: string;
   principalId: string;
+  caseType: CaseType;
   unitId: string;
   unitLabel: string;
   serial: string;
+  equipmentNote: string;
   hospitalName: string;
   department: string;
   surgeonName: string;

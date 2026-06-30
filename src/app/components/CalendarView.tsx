@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Package, UserCheck, User, Stethoscope } from "lucide-react";
 import type { Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
@@ -128,20 +128,16 @@ export default function CalendarView({
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 overflow-hidden">
-                  {dayRentals.slice(0, 3).map((r) => {
-                    const principal = getPrincipalById(r.principalId);
-                    return (
-                      <button
-                        key={r.id}
-                        onClick={(e) => { e.stopPropagation(); onEditRental(r); }}
-                        className="text-left truncate text-[10px] font-medium px-1.5 py-0.5 rounded text-white leading-tight"
-                        style={{ backgroundColor: principal?.color ?? "#6b7280" }}
-                        title={`${r.unitLabel} @ ${r.hospitalName} — ${r.representativeName}`}
-                      >
-                        {r.representativeName}
-                      </button>
-                    );
-                  })}
+                  {dayRentals.slice(0, 3).map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={(e) => { e.stopPropagation(); onEditRental(r); }}
+                      className={`text-left truncate text-[10px] font-medium px-1.5 py-0.5 rounded text-white leading-tight ${r.caseType === "rep-only" ? "bg-teal-500" : "bg-blue-500"}`}
+                      title={`${r.caseType === "rep-only" ? (r.equipmentNote || "Rep Only") : r.unitLabel} @ ${r.hospitalName}${r.representativeName ? " — " + r.representativeName : ""}`}
+                    >
+                      {r.representativeName || r.hospitalName}
+                    </button>
+                  ))}
                   {dayRentals.length > 3 && (
                     <span className="text-[10px] text-gray-400 px-1">+{dayRentals.length - 3} more</span>
                   )}
@@ -167,7 +163,7 @@ export default function CalendarView({
           </div>
 
           {selectedRentals.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">No rentals on this day.</p>
+            <p className="text-sm text-gray-400 text-center py-6">No cases on this day.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {selectedRentals.map((r) => (
@@ -209,12 +205,22 @@ function RentalCard({
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-sm font-semibold text-gray-900 truncate">{rental.unitLabel}</span>
+            {rental.caseType === "rep-only"
+              ? <UserCheck size={13} className="text-teal-500 flex-shrink-0" />
+              : <Package size={13} className="text-blue-500 flex-shrink-0" />}
+            <span className="text-sm font-semibold text-gray-900 truncate">
+              {rental.caseType === "rep-only"
+                ? (rental.equipmentNote || "Client's Equipment")
+                : rental.unitLabel}
+            </span>
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white flex-shrink-0"
               style={{ backgroundColor: statusMeta.color }}
             >
               {statusMeta.label}
+            </span>
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${rental.caseType === "rep-only" ? "bg-teal-50 text-teal-600" : "bg-blue-50 text-blue-600"}`}>
+              {rental.caseType === "rep-only" ? "Rep Only" : "Rental"}
             </span>
           </div>
           <p className="text-xs text-gray-600 mb-1">
@@ -222,11 +228,17 @@ function RentalCard({
             {rental.department && ` · ${rental.department}`}
           </p>
           <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-            <span>
-              👤 <strong>{rental.representativeName}</strong>
-            </span>
-            {rental.surgeonName && <span>🔪 {rental.surgeonName}</span>}
-            {rental.procedure && <span>📋 {rental.procedure}</span>}
+            {rental.representativeName && (
+              <span className="flex items-center gap-1">
+                <User size={11} /><strong className="text-gray-700">{rental.representativeName}</strong>
+              </span>
+            )}
+            {rental.surgeonName && (
+              <span className="flex items-center gap-1">
+                <Stethoscope size={11} />{rental.surgeonName}
+              </span>
+            )}
+            {rental.procedure && <span className="text-gray-400">{rental.procedure}</span>}
           </div>
           <p className="text-[11px] text-gray-400 mt-1.5">
             {fmtDisplayShort(rental.rentalStart)} – {fmtDisplayShort(rental.rentalEnd)}

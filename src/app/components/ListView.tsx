@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Calendar, Building2, User, ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
+import { Search, Calendar, Building2, User, ChevronDown, ChevronUp, Trash2, Pencil, Package, UserCheck, Stethoscope } from "lucide-react";
 import type { Representative, Rental } from "@/app/lib/data";
 import {
   fmtDisplay,
@@ -129,7 +129,7 @@ export default function ListView({ rentals, representatives, onEdit, onDelete }:
       {/* List */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <p className="text-gray-400 text-sm">No rentals found.</p>
+          <p className="text-gray-400 text-sm">No cases found.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -190,16 +190,28 @@ function RentalListItem({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-gray-900 truncate">{rental.unitLabel}</span>
+            {rental.caseType === "rep-only" ? (
+              <UserCheck size={13} className="text-teal-500 flex-shrink-0" />
+            ) : (
+              <Package size={13} className="text-blue-500 flex-shrink-0" />
+            )}
+            <span className="text-sm font-semibold text-gray-900 truncate">
+              {rental.caseType === "rep-only"
+                ? (rental.equipmentNote || "Client's Equipment")
+                : rental.unitLabel}
+            </span>
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white flex-shrink-0"
               style={{ backgroundColor: statusMeta.color }}
             >
               {statusMeta.label}
             </span>
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${rental.caseType === "rep-only" ? "bg-teal-50 text-teal-600" : "bg-blue-50 text-blue-600"}`}>
+              {rental.caseType === "rep-only" ? "Rep Only" : "Rental"}
+            </span>
             {isActive && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex-shrink-0">
-                In Use
+                Active
               </span>
             )}
           </div>
@@ -208,10 +220,18 @@ function RentalListItem({
               <Building2 size={11} />
               {rental.hospitalName}
             </span>
-            <span className="flex items-center gap-1">
-              <User size={11} />
-              <strong className="text-gray-700">{rental.representativeName}</strong>
-            </span>
+            {rental.representativeName && (
+              <span className="flex items-center gap-1">
+                <User size={11} />
+                <strong className="text-gray-700">{rental.representativeName}</strong>
+              </span>
+            )}
+            {rental.surgeonName && (
+              <span className="flex items-center gap-1">
+                <Stethoscope size={11} />
+                {rental.surgeonName}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Calendar size={11} />
               {fmtDisplayShort(rental.rentalStart)} – {fmtDisplayShort(rental.rentalEnd)}
@@ -229,8 +249,11 @@ function RentalListItem({
       {expanded && (
         <div className="px-4 pb-4 pt-0 border-t border-gray-100">
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3 text-xs">
-            {rental.department && (
-              <Detail label="Department" value={rental.department} />
+            {rental.caseType === "rep-only" && rental.equipmentNote && (
+              <Detail label="Client's Equipment" value={rental.equipmentNote} />
+            )}
+            {rental.caseType === "rental" && rental.serial && (
+              <Detail label="Serial" value={rental.serial} />
             )}
             {rental.surgeonName && (
               <Detail label="Surgeon" value={rental.surgeonName} />
@@ -238,7 +261,9 @@ function RentalListItem({
             {rental.procedure && (
               <Detail label="Procedure" value={rental.procedure} />
             )}
-            <Detail label="Serial" value={rental.serial} />
+            {rental.department && (
+              <Detail label="Department" value={rental.department} />
+            )}
             <Detail label="Start" value={fmtDisplay(rental.rentalStart)} />
             <Detail label="End" value={fmtDisplay(rental.rentalEnd)} />
           </div>
