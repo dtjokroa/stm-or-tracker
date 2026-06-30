@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -10,7 +11,6 @@ import {
   Wifi,
   WifiOff,
   Loader2,
-  Activity,
 } from "lucide-react";
 import type { Representative, Rental, UnitsByPrincipal } from "@/app/lib/data";
 import { DEFAULT_UNITS, DEFAULT_REPRESENTATIVES, todayStr } from "@/app/lib/data";
@@ -121,9 +121,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Activity size={14} className="text-white" />
-            </div>
+            <Image src="/logo.png" alt="STM logo" width={28} height={28} className="rounded" />
             <span className="text-sm font-bold text-gray-900 hidden sm:block">IOM Tracker</span>
           </div>
 
