@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Plus, Trash2, UserCheck, Pencil, X, Check, Download, Upload, Database } from "lucide-react";
+import { Plus, Trash2, UserCheck, Pencil, X, Check, Download, Upload, Database, Calendar, Copy, CheckCheck } from "lucide-react";
 import type { Representative, Rental, Unit, UnitsByPrincipal } from "@/app/lib/data";
 import { REPRESENTATIVE_ROLES, PRINCIPAL_ID, PRINCIPALS, uid } from "@/app/lib/data";
 
@@ -341,12 +341,82 @@ function BackupTab({
         </p>
       )}
 
+      {/* Google Calendar sync */}
+      <div className="pt-4 border-t border-gray-100">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Google Calendar Sync</p>
+        <p className="text-sm text-gray-500 mb-3">
+          Subscribe to a live calendar feed. Google Calendar will auto-refresh every few hours.
+        </p>
+        <CalendarFeedButton />
+      </div>
+
       {/* DB note */}
       <div className="pt-2 border-t border-gray-100">
         <div className="flex items-start gap-2 text-xs text-gray-400">
           <Database size={12} className="mt-0.5 flex-shrink-0" />
           <p>Cloud data is stored in Supabase with daily automated backups. Point-in-Time Recovery is available on paid plans.</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CalendarFeedButton() {
+  const [copied, setCopied] = useState(false);
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const httpsUrl = `${origin}/api/calendar`;
+  const webcalUrl = httpsUrl.replace(/^https?/, "webcal");
+
+  function copyUrl() {
+    navigator.clipboard.writeText(httpsUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function openInGoogleCalendar() {
+    const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`;
+    window.open(gcalUrl, "_blank");
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* URL display */}
+      <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+        <Calendar size={13} className="text-gray-400 flex-shrink-0" />
+        <span className="text-xs text-gray-600 font-mono truncate flex-1">{httpsUrl}</span>
+        <button
+          onClick={copyUrl}
+          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 flex-shrink-0 font-medium transition-colors"
+        >
+          {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={openInGoogleCalendar}
+          className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+        >
+          <Calendar size={13} />
+          Add to Google Calendar
+        </button>
+        <a
+          href={webcalUrl}
+          className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+        >
+          <Download size={13} />
+          Subscribe (webcal)
+        </a>
+      </div>
+
+      <div className="text-xs text-gray-400 space-y-0.5">
+        <p>• <strong>Google Calendar:</strong> click "Add to Google Calendar" above, or go to Other calendars → From URL and paste the link.</p>
+        <p>• <strong>Apple / Outlook:</strong> click "Subscribe (webcal)" or paste the URL into your calendar app.</p>
+        <p>• Updates sync automatically every few hours. Each case appears as a full-day event.</p>
       </div>
     </div>
   );
